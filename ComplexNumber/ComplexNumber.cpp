@@ -122,14 +122,14 @@ public:
     RationalNumber operator-() const {
         return RationalNumber(-numerator, denominator);
     }
+    friend ostream& operator<<(ostream& out, const RationalNumber& rational) {
+        return out << rational.numerator << "/" << rational.denominator;
+    }
     int64_t GetNumerator() {
         return numerator;
     }
     int64_t GetDenominator() {
         return denominator;
-    }
-    string GetDecimal() {
-        return to_string(numerator) + '/' + to_string(denominator);
     }
 };
 
@@ -139,9 +139,9 @@ private:
     RationalNumber imag_part;
 public:
     ComplexNumber() {}
-    explicit ComplexNumber(double real_num, double imag_part) {
-        this->real_num = RationalNumber(real_num);
-        this->imag_part = RationalNumber(imag_part);
+    explicit ComplexNumber(RationalNumber real_num, RationalNumber imag_part) {
+        this->real_num = real_num;
+        this->imag_part = imag_part;
     }
     ComplexNumber(const ComplexNumber& other) {
         real_num = other.real_num;
@@ -152,29 +152,82 @@ public:
         imag_part = other.imag_part;
         return *this;
     }
+    ComplexNumber operator+(const ComplexNumber& other) const {
+        RationalNumber new_real = real_num + other.real_num;
+        RationalNumber new_image = imag_part + other.imag_part;
+        return ComplexNumber(new_real, new_image);
+    }
+    ComplexNumber& operator+=(const ComplexNumber& other) {
+        *this = *this + other;
+        return *this;
+    }
+    ComplexNumber operator-(const ComplexNumber& other) const {
+        RationalNumber new_real = real_num - other.real_num;
+        RationalNumber new_image = imag_part - other.imag_part;
+        return ComplexNumber(new_real, new_image);
+    }
+    ComplexNumber& operator-=(const ComplexNumber& other) {
+        *this = *this - other;
+        return *this;
+    }
+    ComplexNumber operator*(const ComplexNumber& other) const {
+        RationalNumber new_real = real_num * other.real_num - imag_part * other.imag_part;
+        RationalNumber new_image = real_num * other.imag_part + imag_part * other.real_num;
+        return ComplexNumber(new_real, new_image);
+    }
+    ComplexNumber& operator*=(const ComplexNumber& other) {
+        *this = *this * other;
+        return *this;
+    }
+    ComplexNumber operator/(const ComplexNumber& other) const {
+        RationalNumber new_real = (real_num * other.real_num + imag_part * other.imag_part) / (other.real_num * other.real_num + other.imag_part * other.imag_part);
+        RationalNumber new_image = (imag_part * other.real_num - real_num * other.imag_part) / (other.real_num * other.real_num + other.imag_part * other.imag_part);
+        return ComplexNumber(new_real, new_image);
+    }
+    ComplexNumber& operator/=(const ComplexNumber& other) {
+        *this = *this / other;
+        return *this;
+    }
+    bool operator==(const ComplexNumber& other) const {
+        return real_num == other.real_num && imag_part == other.imag_part;
+    }
+    bool operator!=(const ComplexNumber& other) const {
+        return !(*this == other);
+    }
+    ComplexNumber operator-() const {
+        return ComplexNumber(-real_num, -imag_part);
+    }
+    friend ostream& operator<<(ostream& out, const ComplexNumber& complex) {
+        return out << "ComplexNumber(" << complex.real_num << ", " << complex.imag_part << ")";
+    }
+    void SetReal(double real_num) {
+        this->real_num = real_num;
+    }
+    void SerImag(double imag_part) {
+        this->imag_part = imag_part;
+    }
     RationalNumber GetReal() {
         return real_num;
     }
     RationalNumber GetImag() {
         return imag_part;
     }
-    string GetComplex() {
-        return GetReal().GetDecimal() + " + i " + GetImag().GetDecimal();
-    }
 };
 
 int main()
 {
-    RationalNumber l;
-    cout << l.GetDecimal() << endl;
-
-
     ComplexNumber c;
-    cout << c.GetComplex() << endl;
-    ComplexNumber a(1.5, 2);
-    cout << a.GetComplex() << endl;
-    ComplexNumber b(1.2, 7);
-    cout << b.GetComplex() << endl;
-    a = b;
-    cout << a.GetComplex() << endl;
+    cout << c << endl;
+
+    ComplexNumber a(-1.5, 2);
+    cout << a << endl;
+
+    ComplexNumber b(-1.5, -2);
+    cout << b << endl;
+
+    cout << endl;
+    c.SetReal(81.169);
+    c.SerImag(1.2);
+    //cout << a.GetComplex() << endl;
+    cout << -c << endl;
 }

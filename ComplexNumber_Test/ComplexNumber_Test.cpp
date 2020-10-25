@@ -11,6 +11,7 @@ namespace ComplexNumberTest
 		
 		TEST_METHOD(TestMethod1)
 		{
+
 		}
 	};
 }
