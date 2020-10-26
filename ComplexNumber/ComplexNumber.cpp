@@ -47,12 +47,15 @@ public:
         }
     }
     int64_t GreatestCommonFactor(int64_t number_one, int64_t number_two) {
-        while (number_one != 0) {
-            auto support = number_two % number_one;
-            number_two = number_one;
-            number_one = support;
+        while (number_one != number_two) {
+            if (number_one > number_two) {
+                int64_t support = number_one;
+                number_one = number_two;
+                number_two = support;
+            }
+            number_two -= number_one;
         }
-        return number_two;
+        return number_one;
     }
     void Reduction() {
         int64_t div = GreatestCommonFactor(abs(numerator), denominator);
@@ -64,15 +67,15 @@ public:
         denominator = other.denominator;
         return *this;
     }
-    RationalNumber operator+(const RationalNumber& other) const {
+    friend const RationalNumber operator+(const RationalNumber& our, const RationalNumber& other) {
         int64_t new_num, new_den;
-        if (denominator != other.denominator) {
-            new_num = numerator * other.denominator + other.numerator * denominator;
-            new_den = denominator * other.denominator;
+        if (our.denominator != other.denominator) {
+            new_num = our.numerator * other.denominator + other.numerator * our.denominator;
+            new_den = our.denominator * other.denominator;
         }
         else {
-            new_num = numerator + other.numerator;
-            new_den = denominator;
+            new_num = our.numerator + other.numerator;
+            new_den = our.denominator;
         }
         return RationalNumber(new_num, new_den);
     }
@@ -80,15 +83,15 @@ public:
         *this = *this + other;
         return *this;
     }
-    RationalNumber operator-(const RationalNumber& other) const {
+    friend const RationalNumber operator-(const RationalNumber& our, const RationalNumber& other) {
         int64_t new_num, new_den;
-        if (denominator != other.denominator) {
-            new_num = numerator * other.denominator - other.numerator * denominator;
-            new_den = denominator * other.denominator;
+        if (our.denominator != other.denominator) {
+            new_num = our.numerator * other.denominator - other.numerator * our.denominator;
+            new_den = our.denominator * other.denominator;
         }
         else {
-            new_num = numerator - other.numerator;
-            new_den = denominator;
+            new_num = our.numerator - other.numerator;
+            new_den = our.denominator;
         }
         return RationalNumber(new_num, new_den);
     }
@@ -96,40 +99,40 @@ public:
         *this = *this - other;
         return *this;
     }
-    RationalNumber operator*(const RationalNumber& other) const {
-        return RationalNumber(numerator * other.numerator, denominator * other.denominator);
+    friend const RationalNumber operator*(const RationalNumber& our, const RationalNumber& other) {
+        return RationalNumber(our.numerator * other.numerator, our.denominator * other.denominator);
     }
     RationalNumber& operator*=(const RationalNumber& other) {
         *this = *this * other;
         return *this;
     }
-    RationalNumber operator/(const RationalNumber& other) const  {
-        return RationalNumber(numerator * other.denominator, denominator * other.numerator);
+    friend const RationalNumber operator/(const RationalNumber& our, const RationalNumber& other) {
+        return RationalNumber(our.numerator * other.denominator, our.denominator * other.numerator);
     }
     RationalNumber& operator/=(const RationalNumber& other) {
         *this = *this / other;
         return *this;
     }
-    bool operator==(const RationalNumber& other) const {
-        return numerator == other.numerator && denominator == other.denominator;
+    friend const bool operator==(const RationalNumber& our, const RationalNumber& other) {
+        return our.numerator == other.numerator && our.denominator == other.denominator;
     }
-    bool operator!=(const RationalNumber& other) const {
-        return !(*this == other);
+    friend const bool operator!=(const RationalNumber& our, const RationalNumber& other) {
+        return !(our == other);
     }
     RationalNumber operator-() const {
         return RationalNumber(-numerator, denominator);
     }
-    bool operator<(const RationalNumber& other) const {
-        return numerator * other.denominator < other.numerator * denominator;
+    friend const bool operator<(const RationalNumber& our, const RationalNumber& other) {
+        return our.numerator * other.denominator < other.numerator * our.denominator;
     }
-    bool operator>(const RationalNumber& other) const {
-        return numerator * other.denominator > other.numerator* denominator;
+    friend const bool operator>(const RationalNumber& our, const RationalNumber& other) {
+        return our.numerator * other.denominator > other.numerator* our.denominator;
     }
-    bool operator<=(const RationalNumber& other) const {
-        return !(*this > other);
+    friend const bool operator<=(const RationalNumber& our, const RationalNumber& other) {
+        return !(our > other);
     }
-    bool operator>=(const RationalNumber& other) const {
-        return !(*this < other);
+    friend const bool operator>=(const RationalNumber& our, const RationalNumber& other) {
+        return !(our < other);
     }
     RationalNumber Sqrt() const {
         return RationalNumber(sqrt(numerator) / sqrt(denominator));
@@ -142,12 +145,6 @@ public:
     }
     RationalNumber Atan() const {
         return atan(static_cast<double>(numerator) / static_cast<double>(denominator));
-    }
-    int64_t GetNumerator() {
-        return numerator;
-    }
-    int64_t GetDenominator() {
-        return denominator;
     }
 };
 
@@ -165,9 +162,15 @@ public:
         real_num = other.real_num;
         imag_part = other.imag_part;
     }
+    ~ComplexNumber() {}
     ComplexNumber& operator=(const ComplexNumber& other) {
         real_num = other.real_num;
         imag_part = other.imag_part;
+        return *this;
+    }
+    ComplexNumber& operator=(RationalNumber number) {
+        real_num = number;
+        imag_part = 0;
         return *this;
     }
     ComplexNumber operator+(const ComplexNumber& other) const {
@@ -175,8 +178,16 @@ public:
         RationalNumber new_image = imag_part + other.imag_part;
         return ComplexNumber(new_real, new_image);
     }
+    ComplexNumber operator+(RationalNumber number) const {
+        RationalNumber new_real = real_num + number;
+        return ComplexNumber(new_real, imag_part);
+    }
     ComplexNumber& operator+=(const ComplexNumber& other) {
         *this = *this + other;
+        return *this;
+    }
+    ComplexNumber& operator+=(RationalNumber number) {
+        *this = *this + number;
         return *this;
     }
     ComplexNumber operator-(const ComplexNumber& other) const {
@@ -184,8 +195,16 @@ public:
         RationalNumber new_image = imag_part - other.imag_part;
         return ComplexNumber(new_real, new_image);
     }
+    ComplexNumber operator-(RationalNumber number) const {
+        RationalNumber new_real = real_num - number;
+        return ComplexNumber(new_real, imag_part);
+    }
     ComplexNumber& operator-=(const ComplexNumber& other) {
         *this = *this - other;
+        return *this;
+    }
+    ComplexNumber& operator-=(RationalNumber number) {
+        *this = *this - number;
         return *this;
     }
     ComplexNumber operator*(const ComplexNumber& other) const {
@@ -193,24 +212,39 @@ public:
         RationalNumber new_image = real_num * other.imag_part + imag_part * other.real_num;
         return ComplexNumber(new_real, new_image);
     }
+    ComplexNumber operator*(RationalNumber number) const {
+        return ComplexNumber(real_num * number, imag_part * number);
+    }
     ComplexNumber& operator*=(const ComplexNumber& other) {
         *this = *this * other;
         return *this;
     }
+    ComplexNumber& operator*=(RationalNumber number) {
+        *this = *this * number;
+        return *this;
+    }
     ComplexNumber operator/(const ComplexNumber& other) const {
-        RationalNumber new_real = (real_num * other.real_num + imag_part * other.imag_part) / (other.real_num.Sqt() + other.imag_part.Sqt());
-        RationalNumber new_image = (imag_part * other.real_num - real_num * other.imag_part) / (other.real_num.Sqt() + other.imag_part.Sqt());
+        RationalNumber div = other.real_num.Sqt() + other.imag_part.Sqt();
+        RationalNumber new_real = (real_num * other.real_num + imag_part * other.imag_part) / div;
+        RationalNumber new_image = (imag_part * other.real_num - real_num * other.imag_part) / div;
         return ComplexNumber(new_real, new_image);
+    }
+    ComplexNumber operator/(RationalNumber number) const {
+        return ComplexNumber(real_num / number, imag_part / number);
     }
     ComplexNumber& operator/=(const ComplexNumber& other) {
         *this = *this / other;
         return *this;
     }
-    bool operator==(const ComplexNumber& other) const {
-        return real_num == other.real_num && imag_part == other.imag_part;
+    ComplexNumber& operator/=(RationalNumber number) {
+        *this = *this / number;
+        return *this;
     }
-    bool operator!=(const ComplexNumber& other) const {
-        return !(*this == other);
+    friend const bool operator==(const ComplexNumber& our, const ComplexNumber& other) {
+        return our.real_num == other.real_num && our.imag_part == other.imag_part;
+    }
+    friend const bool operator!=(const ComplexNumber& our, const ComplexNumber& other) {
+        return !(our == other);
     }
     ComplexNumber operator-() const {
         return ComplexNumber(-real_num, -imag_part);
@@ -240,10 +274,10 @@ public:
     friend ostream& operator<<(ostream& out, const ComplexNumber& complex) {
         return out << "ComplexNumber(" << complex.real_num << ", " << complex.imag_part << ")";
     }
-    void SetReal(double real_num) {
+    void SetReal(RationalNumber real_num) {
         this->real_num = real_num;
     }
-    void SerImag(double imag_part) {
+    void SetImag(RationalNumber imag_part) {
         this->imag_part = imag_part;
     }
     RationalNumber GetReal() {
@@ -256,25 +290,5 @@ public:
 
 int main()
 {
-    ComplexNumber c;
-    //cout << c << endl;
-    //cout << sqrt(80) << endl;
-    ComplexNumber a(44.0912, 98.012);
-    cout << a << endl;
-    cout << endl;
-    //c = a.Pow(2);
-    //cout << c << endl;
-    //cout << a.Abs() << endl;
-    //cout << a.Pow(5) << endl;
-    cout << a.Arg() << endl;
-    cout << a.Abs() << endl;
-    
-    //ComplexNumber b(-1.5, -2);
-    //cout << b << endl;
 
-    //cout << endl;
-    //c.SetReal(81.169);
-    //c.SerImag(1.2);
-    //cout << a.GetComplex() << endl;
-    //cout << -c << endl;
 }
