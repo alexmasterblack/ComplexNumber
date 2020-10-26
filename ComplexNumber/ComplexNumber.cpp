@@ -1,7 +1,7 @@
 ﻿#include <iostream>
 #include <cmath> 
 #include <string>
-#include <sstream>   
+#include <sstream>
 
 using namespace std;
 
@@ -47,15 +47,12 @@ public:
         }
     }
     int64_t GreatestCommonFactor(int64_t number_one, int64_t number_two) {
-        if (number_one == number_two) {
-            return number_one;
+        while (number_one != 0) {
+            auto support = number_two % number_one;
+            number_two = number_one;
+            number_one = support;
         }
-        if (number_one > number_two) {
-            int64_t support = number_one;
-            number_one = number_two;
-            number_two = support;
-        }
-        return GreatestCommonFactor(number_one, number_two - number_one);
+        return number_two;
     }
     void Reduction() {
         int64_t div = GreatestCommonFactor(abs(numerator), denominator);
@@ -122,8 +119,29 @@ public:
     RationalNumber operator-() const {
         return RationalNumber(-numerator, denominator);
     }
+    bool operator<(const RationalNumber& other) const {
+        return numerator * other.denominator < other.numerator * denominator;
+    }
+    bool operator>(const RationalNumber& other) const {
+        return numerator * other.denominator > other.numerator* denominator;
+    }
+    bool operator<=(const RationalNumber& other) const {
+        return !(*this > other);
+    }
+    bool operator>=(const RationalNumber& other) const {
+        return !(*this < other);
+    }
+    RationalNumber Sqrt() const {
+        return RationalNumber(sqrt(numerator) / sqrt(denominator));
+    }
+    RationalNumber Sqt() const {
+        return RationalNumber(numerator * numerator, denominator * denominator);
+    }
     friend ostream& operator<<(ostream& out, const RationalNumber& rational) {
         return out << rational.numerator << "/" << rational.denominator;
+    }
+    RationalNumber Atan() const {
+        return atan(static_cast<double>(numerator) / static_cast<double>(denominator));
     }
     int64_t GetNumerator() {
         return numerator;
@@ -180,8 +198,8 @@ public:
         return *this;
     }
     ComplexNumber operator/(const ComplexNumber& other) const {
-        RationalNumber new_real = (real_num * other.real_num + imag_part * other.imag_part) / (other.real_num * other.real_num + other.imag_part * other.imag_part);
-        RationalNumber new_image = (imag_part * other.real_num - real_num * other.imag_part) / (other.real_num * other.real_num + other.imag_part * other.imag_part);
+        RationalNumber new_real = (real_num * other.real_num + imag_part * other.imag_part) / (other.real_num.Sqt() + other.imag_part.Sqt());
+        RationalNumber new_image = (imag_part * other.real_num - real_num * other.imag_part) / (other.real_num.Sqt() + other.imag_part.Sqt());
         return ComplexNumber(new_real, new_image);
     }
     ComplexNumber& operator/=(const ComplexNumber& other) {
@@ -196,6 +214,28 @@ public:
     }
     ComplexNumber operator-() const {
         return ComplexNumber(-real_num, -imag_part);
+    }
+    RationalNumber Abs() const {
+        return RationalNumber((real_num.Sqt() + imag_part.Sqt()).Sqrt());
+    }
+    RationalNumber Arg() const {
+        RationalNumber PI = acos(-1.0);
+        RationalNumber arg_result = RationalNumber(imag_part / real_num).Atan();
+        if (real_num < 0 && imag_part >= 0) {
+            arg_result += PI;
+        }
+        else if (real_num < 0 && imag_part < 0) {
+            arg_result -= PI;
+        }
+        return arg_result;
+    }
+    ComplexNumber Pow(int power = 2) {
+        ComplexNumber result(real_num, imag_part);
+        ComplexNumber complex_pow(real_num, imag_part);
+        for (int i = 1; i < power; i++) {
+            result *= complex_pow;
+        }
+        return result;
     }
     friend ostream& operator<<(ostream& out, const ComplexNumber& complex) {
         return out << "ComplexNumber(" << complex.real_num << ", " << complex.imag_part << ")";
@@ -217,17 +257,24 @@ public:
 int main()
 {
     ComplexNumber c;
-    cout << c << endl;
-
-    ComplexNumber a(-1.5, 2);
+    //cout << c << endl;
+    //cout << sqrt(80) << endl;
+    ComplexNumber a(44.0912, 98.012);
     cout << a << endl;
-
-    ComplexNumber b(-1.5, -2);
-    cout << b << endl;
-
     cout << endl;
-    c.SetReal(81.169);
-    c.SerImag(1.2);
+    //c = a.Pow(2);
+    //cout << c << endl;
+    //cout << a.Abs() << endl;
+    //cout << a.Pow(5) << endl;
+    cout << a.Arg() << endl;
+    cout << a.Abs() << endl;
+    
+    //ComplexNumber b(-1.5, -2);
+    //cout << b << endl;
+
+    //cout << endl;
+    //c.SetReal(81.169);
+    //c.SerImag(1.2);
     //cout << a.GetComplex() << endl;
-    cout << -c << endl;
+    //cout << -c << endl;
 }
